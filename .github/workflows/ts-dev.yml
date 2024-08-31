@@ -1,0 +1,52 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Typesctipt CI/CD deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: install web app dependencies
+      working-directory: ./web
+      run: npm ci
+
+    - name: build web app
+      working-directory: ./web
+      run: npm run build
+
+    - name: install AWS CDK
+      run: sudo npm install -g aws-cdk
+
+    - name: install deployment dependencies
+      working-directory: ./infrastructure
+      run: npm ci
+
+    - name: cdk synth
+      working-directory: ./infrastructure
+      run: cdk synth
+
+    - name: cdk deploy
+      working-directory: ./infrastructure
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'eu-west-2' }} }}
+      run: |
+        export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+        export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        export AWS_DEFAULT_REGION=${{ secrets.AWS_REGION || 'eu-west-2' }}
+        cdk deploy

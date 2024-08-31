@@ -35,7 +35,7 @@ export class WebDeploymentStack extends cdk.Stack {
       destinationBucket: deploymentBucket,
       sources: [Source.asset(distDir)],
       distribution,
-      distributionPaths: ["/*"],
+      // distributionPaths: ["/*"],
     });
 
     new cdk.CfnOutput(this, "WebDeploymentDistributionDomainName", {
